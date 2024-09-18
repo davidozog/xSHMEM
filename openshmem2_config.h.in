@@ -1,0 +1,7 @@
+#define openshmem_VERSION_MAJOR @openshmem_VERSION_MAJOR@
+#define openshmem_VERSION_MINOR @openshmem_VERSION_MINOR@
+
+#cmakedefine ENABLE_SHMEM
+#cmakedefine ENABLE_NVSHMEM
+#cmakedefine ENABLE_ISHMEM
+#cmakedefine ENABLE_ROCSHMEM
