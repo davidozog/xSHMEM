@@ -199,7 +199,7 @@ std::unique_ptr<OpenSHMEM> shmem_create_library(void) {
         std::cout << "You chose SHMEM_LIBRARY: " << library_name << std::endl;
     } else {
         std::cout << "SHMEM_LIBRARY env var unset, picking SHMEM." << std::endl;
-        char shmem_lib[6];
+        char shmem_lib[6] = "";
         strcat(shmem_lib, "SHMEM");
         library_name = shmem_lib;
     }
