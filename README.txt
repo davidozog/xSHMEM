@@ -1,13 +1,17 @@
+Project Name:  xSHMEM
+
+This project is just an OpenSHMEM-inspired thought experiment, nothing more.
+
 ===============================================================================
 SUMMARY:
 ===============================================================================
 
 This is an experiment to evaluate the possibility and utility of a future
-OpenSHMEM API (version 2.0?) that consists of a standardized derived base class
-that vendor implementations must inherit.
+OpenSHMEM API that would consist of a standardized derived base class that all
+library implementations must inherit.
 
 This project enables a subset (proof-of-concept) of either the standard
-OpenSHMEM API or one of the following vendor-specific SHMEM libraries:
+OpenSHMEM C/C++ API or one of the following vendor-specific SHMEM libraries:
   * Intel SHMEM
   * NVSHMEM
   * ROC_SHMEM

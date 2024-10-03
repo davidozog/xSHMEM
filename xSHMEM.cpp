@@ -193,11 +193,8 @@ std::unique_ptr<OpenSHMEM> shmem_create_library(const char *library_name) {
 
 std::unique_ptr<OpenSHMEM> shmem_create_library(void) {
     char* library_name = std::getenv("SHMEM_LIBRARY");
-    //TODO: sanitize...
 
-    if (library_name) {
-        std::cout << "You chose SHMEM_LIBRARY: " << library_name << std::endl;
-    } else {
+    if (!library_name) {
         std::cout << "SHMEM_LIBRARY env var unset, picking SHMEM." << std::endl;
         char shmem_lib[6] = "";
         strcat(shmem_lib, "SHMEM");
@@ -234,7 +231,7 @@ int main() {
     /* Create an instance of a standard OpenSHMEM implementation */
 
     //auto shmem = shmem_create_library(shmem_lib);
-    
+
     /* Or create with an environment variable: */
     auto shmem = shmem_create_library();
 
