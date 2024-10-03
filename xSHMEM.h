@@ -40,7 +40,7 @@ public:
 
     /* TODO: all other OpenSHMEM routines.. */
 
-    /* Add other (e.g. vendor-specific) SHMEM extension routines as needed ? */
+    /* TODO: Add other (e.g. vendor-specific) SHMEM extension routines as needed ? */
 #ifdef ENABLE_SHMEMX
 #ifdef ENABLE_NVSHMEM
     virtual int _init_attr(unsigned int flags, nvshmemx_init_attr_t *attributes) = 0;
@@ -219,30 +219,4 @@ std::unique_ptr<OpenSHMEM> shmem_create_library(void) {
 #endif
     else
         throw std::invalid_argument("Unsupported SHMEM type");
-}
-
-int main() {
-    /* Example: select standard OpenSHMEM */
-    //shmem_library_t shmem_lib = shmem_library_t::SHMEM;
-
-    /* Example: select NVSHMEM */
-    //shmem_library_t shmem_lib = shmem_library_t::NVSHMEM;
-
-    /* Create an instance of a standard OpenSHMEM implementation */
-
-    //auto shmem = shmem_create_library(shmem_lib);
-
-    /* Or create with an environment variable: */
-    auto shmem = shmem_create_library();
-
-    /* Use the selected SHMEM interface */
-    shmem->init();
-
-    std::cout << "Hello from PE " << shmem->my_pe() << " out of " <<
-                 shmem->n_pes() << std::endl;
-
-    /* ... perform the appropriate SHMEM operations ... */
-    shmem->finalize();
-
-    return 0;
 }
