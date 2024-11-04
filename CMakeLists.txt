@@ -15,6 +15,7 @@ option(ENABLE_ROCSHMEM "Enable ROCSHMEM" OFF)
 configure_file(${PROJECT_SOURCE_DIR}/xSHMEM_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_executable(hello_example hello_example.cpp)
+add_executable(sycl_example sycl_example.cpp)
 
 if (ENABLE_SHMEM)
     find_package(SHMEM REQUIRED)
@@ -34,6 +35,11 @@ elseif(ENABLE_ISHMEM)
     target_link_options(hello_example PRIVATE -rdynamic -fsycl -lpthread -lze_loader)
     target_link_libraries(hello_example ISHMEM)
     target_include_directories(hello_example PRIVATE ISHMEM)
+
+    target_compile_options(sycl_example PRIVATE -fsycl -fPIC)
+    target_link_options(sycl_example PRIVATE -rdynamic -fsycl -lpthread -lze_loader)
+    target_link_libraries(sycl_example ISHMEM)
+    target_include_directories(sycl_example PRIVATE ISHMEM)
 elseif(ENABLE_ROCSHMEM)
     find_package(ROCSHMEM REQUIRED)
     set(CMAKE_CXX_COMPILER "hipcc")
@@ -41,5 +47,6 @@ elseif(ENABLE_ROCSHMEM)
 endif()
 
 target_include_directories(hello_example PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+target_include_directories(sycl_example PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
 install(FILES "${PROJECT_SOURCE_DIR}/xSHMEM.h" DESTINATION include)
