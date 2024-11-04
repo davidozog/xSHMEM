@@ -16,10 +16,12 @@
 
 #ifdef ENABLE_NVSHMEM
 #include <nvshmem.h>
+#include <nvshmemx.h>
 #endif
 
 #ifdef ENABLE_ISHMEM
 #include <ishmem.h>
+#include <ishmemx.h>
 #endif
 
 #ifdef ENABLE_ROCSHMEM
@@ -132,7 +134,7 @@ public:
 
     /* Implement other NVSHMEM-specific routines ? */
     void _init_attr(ishmemx_attr_t *attr) {
-        return ishmem_init_attr(attr);
+        return ishmemx_init_attr(attr);
     }
 };
 #endif /* ENABLE_ISHMEM */
