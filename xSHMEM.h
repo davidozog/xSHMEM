@@ -40,6 +40,7 @@ public:
     virtual int n_pes() = 0;
     virtual void put(int *dest, const int *source, size_t nelems, int pe) = 0;
     virtual void* malloc(size_t size) = 0;
+    virtual void* calloc(size_t count, size_t size) = 0;
 
     /* TODO: all other OpenSHMEM routines.. */
 
@@ -69,8 +70,9 @@ public:
     int my_pe(void) {
         return API::my_pe();
     }
-    //int my_pe() = 0;
-    //int n_pes() = 0;
+    int n_pes(void) {
+        return API::n_pes();
+    }
     //void put(int *dest, const int *source, size_t nelems, int pe) = 0;
     //void* malloc(size_t size) = 0;
 
@@ -78,8 +80,19 @@ public:
         return API::malloc(size);
     }
 
+    void *calloc(size_t count, size_t size) {
+        return API::calloc(count, size);
+    }
+
     void free(void *ptr) {
         return API::free(ptr);
+    }
+    void barrier_all(void) {
+        return API::barrier_all();
+    }
+
+    void int_p(int *source, int value, int pe) {
+        return API::int_p(source, value, pe);
     }
 
     /* TODO: all other OpenSHMEM routines.. */
@@ -106,6 +119,11 @@ public:
         return shmem_malloc(size);
     }
 
+    static void *calloc(size_t count, size_t size) {
+        std::cout << "Calling shmem_calloc API" << std::endl;
+        return shmem_calloc(count, size);
+    }
+
     static void free(void *ptr) {
         std::cout << "Calling shmem_free API" << std::endl;
         return shmem_free(ptr);
@@ -114,6 +132,11 @@ public:
     static int my_pe(void) {
         std::cout << "Calling shmem_my_pe API" << std::endl;
         return shmem_my_pe();
+    }
+
+    static int n_pes(void) {
+        std::cout << "Calling shmem_n_pes API" << std::endl;
+        return shmem_n_pes();
     }
 
     // Add other shmem_* specific methods here
@@ -146,6 +169,10 @@ public:
         return shmem_malloc(size);
     }
 
+    void* calloc(size_t count, size_t size) override {
+        return shmem_calloc(count, size);
+    }
+
     /* TODO: all other OpenSHMEM routines.. */
 };
 #endif /* ENABLE_SHMEM */
@@ -167,6 +194,11 @@ public:
     static void *malloc(size_t size) {
         std::cout << "Calling nvshmem_malloc API" << std::endl;
         return nvshmem_malloc(size);
+    }
+
+    static void *calloc(size_t count, size_t size) {
+        std::cout << "Calling nvshmem_calloc API" << std::endl;
+        return nvshmem_calloc(count, size);
     }
 
     static void free(void *ptr) {
@@ -206,6 +238,10 @@ public:
         return nvshmem_malloc(size);
     }
 
+    void* calloc(size_t count, size_t size) override {
+        return nvshmem_calloc(size);
+    }
+
     // Implement other NVSHMEM-specific routines
     int _init_attr(unsigned int flags, nvshmemx_init_attr_t *attributes) {
         return nvshmemx_init_attr(flags, attributes);
@@ -231,6 +267,11 @@ public:
         return ishmem_malloc(size);
     }
 
+    static void *calloc(size_t count, size_t size) {
+        std::cout << "Calling ishmem_calloc API" << std::endl;
+        return ishmem_calloc(count, size);
+    }
+
     static void free(void *ptr) {
         std::cout << "Calling ishmem_free API" << std::endl;
         return ishmem_free(ptr);
@@ -245,6 +286,41 @@ public:
     static int my_pe(void) {
         std::cout << "Calling ishmem_my_pe API (host)" << std::endl;
         return ishmem_my_pe();
+    }
+#endif
+
+#if __SYCL_DEVICE_ONLY__
+    static SYCL_EXTERNAL int n_pes(void) {
+        ishmemx_print("Calling ishmem_n_pes API (device)\n");
+        return ishmem_n_pes();
+    }
+#else
+    static int n_pes(void) {
+        std::cout << "Calling ishmem_n_pes API (host)" << std::endl;
+        return ishmem_n_pes();
+    }
+#endif
+
+#if __SYCL_DEVICE_ONLY__
+    static SYCL_EXTERNAL void barrier_all(void) {
+        return ishmem_barrier_all();
+    }
+#else
+    static void barrier_all(void) {
+        std::cout << "Calling ishmem_barrier_all API" << std::endl;
+        return ishmem_barrier_all();
+    }
+#endif
+
+#if __SYCL_DEVICE_ONLY__
+    static SYCL_EXTERNAL void int_p(int *source, int value, int pe) {
+        //std::cout << "Calling ishmem_int_g API" << std::endl;
+        return ishmem_int_p(source, value, pe);
+    }
+#else
+    static void int_p(int *source, int value, int pe) {
+        std::cout << "Calling ishmem_int_p API" << std::endl;
+        return ishmem_int_p(source, value, pe);
     }
 #endif
 };
@@ -280,6 +356,11 @@ public:
     void* malloc(size_t size) override {
         return ishmem_malloc(size);
     }
+
+    void* calloc(size_t count, size_t size) override {
+        return ishmem_calloc(count, size);
+    }
+
 
     /* Implement other NVSHMEM-specific routines ? */
     void _init_attr(ishmemx_attr_t *attr) {

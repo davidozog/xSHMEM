@@ -8,48 +8,82 @@
 constexpr size_t N = 10;
 
 int main() {
-    /* Example: select standard OpenSHMEM */
-    //shmem_library_t shmem_lib = shmem_library_t::SHMEM;
-
-    /* Example: select NVSHMEM */
-    //shmem_library_t shmem_lib = shmem_library_t::NVSHMEM;
-
-    /* Create an instance of a standard OpenSHMEM implementation */
-
-    //auto shmem = shmem_create_library(shmem_lib);
-
-    sycl::queue q;
-
-    /* Or create with an environment variable: */
-    //auto shmem = shmem_create_library();
-
-    /* Use the selected SHMEM interface */
-    //shmem->init();
-
-    //std::cout << "My PE: " << shmem->my_pe()
-    //          << " , Selected device: " << q.get_device().get_info<sycl::info::device::name>()
-    //          << std::endl;
-
-    //// Allocate memory on the ISHMEM symmetric heap on the device
-    //int *src = (int *) shmem->malloc(N * sizeof(int));
-    //int *dst = (int *) shmem->malloc(N * sizeof(int));
 
     OpenSHMEM2<IshmemAPI> *shmem;
+    sycl::queue q;
+
     shmem->init();
 
-    std::cout << "My PE: " << shmem->my_pe()
+    int my_pe = shmem->my_pe();
+    int n_pes = shmem->n_pes();
+
+    std::cout << "My PE: " << my_pe << " out of " << n_pes
               << " , Selected device: " << q.get_device().get_info<sycl::info::device::name>()
               << std::endl;
 
-    int *src = (int *) shmem->malloc(N * sizeof(int));
+    int *dst = (int *) shmem->calloc(N, sizeof(int));
 
-    // Initialize the src array on each device with the value pe
-    q.parallel_for(sycl::range<1>(N), [=](sycl::item<1> id) { src[id] = shmem->my_pe(); }).wait();
+    // Ensure completion of initialization
+    shmem->barrier_all();
 
-    /* ... perform the appropriate SHMEM operations ... */
-    //shmem->finalize();
+    // Get data from the next device
+    //q.parallel_for(sycl::range<1>(N), [=](sycl::item<1> id) {
+    //     int next_pe = (my_pe + 1) % shmem->n_pes();
+    //     int value = shmem->my_pe();
+    //     shmem->int_p(&dst[id], value, next_pe);
+    //}).wait_and_throw();
 
-    shmem->free(src);
+    auto e_verify = q.submit([&](sycl::handler &h) {
+        h.single_task([=]() {
+           int next_pe = (my_pe + 1) % shmem->n_pes();
+           int value = shmem->my_pe();
+           shmem->int_p(dst, value, next_pe);
+        });
+    });
+    e_verify.wait_and_throw();
+
+    // Ensure completion of get operations and wait for other PEs
+    shmem->barrier_all();
+
+    // Verify the data
+    int *check = (int *) sycl::malloc_host<int>(N, q);
+    //q.parallel_for(sycl::range<1>(N), [=](sycl::item<1> id) {
+    //     int expected = my_pe == 0 ? n_pes - 1 : my_pe - 1;
+    //     if (dst[id] != expected) {
+    //         check[id] = 1;
+    //     } else {
+    //         check[id] = 0;
+    //     }
+    //}).wait();
+
+    e_verify = q.submit([&](sycl::handler &h) {
+        h.single_task([=]() {
+            int expected = my_pe == 0 ? n_pes - 1 : my_pe - 1;
+            if (dst[0] != expected) {
+                check[0] = 1;
+            } else {
+                check[0] = 0;
+            }
+        });
+    });
+    e_verify.wait_and_throw();
+
+    bool check_fail = false;
+    for (size_t i = 0; i < 1; i++)
+    //for (size_t i = 0; i < N; i++)
+        if (check[i]) {
+            std::cerr << "PE: " << my_pe << " SHMEM get failed at index: " << i << std::endl;
+            check_fail = true;
+            continue;
+        }
+
+    if (!check_fail)
+        std::cout << my_pe << " PE successfully received the data using SHMEM get." << std::endl;
+
+    fflush(stdout);
+
+    free(check, q);
+    shmem->free(dst);
     shmem->finalize();
 
     return 0;
