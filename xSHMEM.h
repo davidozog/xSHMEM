@@ -54,6 +54,9 @@ public:
 #endif /* ENABLE_SHMEMX */
 };
 
+/* The OpenSHMEM2 version relies on static polymorphism (a template) to choose
+ * the implementation, not on virtual functions. Virtual functions are not
+ * callable from SYCL kernels. */
 template <typename API>
 class OpenSHMEM2 {
 public:
@@ -102,7 +105,7 @@ public:
 
 #ifdef ENABLE_SHMEM
 // Specific API implementations
-class ShmemAPI {
+class shmem {
 public:
     static void init() {
         std::cout << "Initializing shmem_init API" << std::endl;
@@ -179,7 +182,7 @@ public:
 
 #ifdef ENABLE_NVSHMEM
 
-class NvshmemAPI {
+class nvshmem {
 public:
     static void init() {
         std::cout << "Initializing nvshmem_init API" << std::endl;
@@ -250,7 +253,7 @@ public:
 #endif /* ENABLE_NVSHMEM */
 
 #ifdef ENABLE_ISHMEM
-class IshmemAPI {
+class ishmem {
 public:
     static void init() {
         std::cout << "Initializing ishmem_init API" << std::endl;
@@ -423,7 +426,7 @@ std::unique_ptr<OpenSHMEM> shmem_create_library(const char *library_name) {
         throw std::invalid_argument("Unsupported SHMEM type");
 }
 
-OpenSHMEM* shmem_create_library(void) {
+std::unique_ptr<OpenSHMEM> shmem_create_library(void) {
     char* library_name = std::getenv("SHMEM_LIBRARY");
 
     if (!library_name) {
@@ -435,19 +438,19 @@ OpenSHMEM* shmem_create_library(void) {
 
 #ifdef ENABLE_SHMEM
     if (strcmp(library_name, "SHMEM") == 0)
-        return OpenSHMEMImplementation();
+        return std::make_unique<OpenSHMEMImplementation>();
 #endif
 #ifdef ENABLE_NVSHMEM
     if (strcmp(library_name, "NVSHMEM") == 0)
-        return NVSHMEMImplementation();
+        return std::make_unique<NVSHMEMImplementation>();
 #endif
 #ifdef ENABLE_ISHMEM
     if (strcmp(library_name, "ISHMEM") == 0)
-        return new ISHMEMImplementation();
+        return std::make_unique<ISHMEMImplementation>();
 #endif
 #ifdef ENABLE_ROCSHMEM
     if (strcmp(library_name, "ROCSHMEM") == 0)
-        return ROCSHMEMImplementation();
+        return std::make_unique<ROCSHMEMImplementation>();
 #endif
     else
         throw std::invalid_argument("Unsupported SHMEM type");

@@ -40,6 +40,13 @@ elseif(ENABLE_ISHMEM)
     target_link_options(sycl_example PRIVATE -rdynamic -fsycl -lpthread -lze_loader)
     target_link_libraries(sycl_example ISHMEM)
     target_include_directories(sycl_example PRIVATE ISHMEM)
+
+    # Ahead-of-time compliation flags may be needed for ISHMEM:
+    set(CMAKE_CXX_FLAGS "-fsycl-targets=spir64_gen")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --start-no-unused-arguments -Xs \"-device pvc\" --end-no-unused-arguments")
+    # Suppress the `Compilation from IR - skipping loading of FCL` outputs:
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --start-no-unused-arguments -Xsycl-target-backend \"-q\" --end-no-unused-arguments")
+
 elseif(ENABLE_ROCSHMEM)
     find_package(ROCSHMEM REQUIRED)
     set(CMAKE_CXX_COMPILER "hipcc")

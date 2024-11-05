@@ -9,7 +9,7 @@ constexpr size_t N = 10;
 
 int main() {
 
-    OpenSHMEM2<IshmemAPI> *shmem;
+    OpenSHMEM2<ishmem> *shmem;
     sycl::queue q;
 
     shmem->init();
